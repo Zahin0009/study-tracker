@@ -30,26 +30,24 @@
 
     <script>
         async function auth(type) {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-            if (!email || !password) {
-                alert("Please fill in all fields");
-                return;
+    const { data, error } = type === 'in' 
+        ? await supabaseClient.auth.signInWithPassword({ email, password })
+        : await supabaseClient.auth.signUp({ 
+            email, 
+            password,
+            options: {
+                // This ensures the email link sends them back to your site
+                emailRedirectTo: window.location.origin + window.location.pathname.replace('login.html', 'index.html')
             }
-
-            const { data, error } = type === 'in' 
-                ? await supabaseClient.auth.signInWithPassword({ email, password })
-                : await supabaseClient.auth.signUp({ email, password });
-            
-            if (error) {
-                alert(error.message);
-            } else if (type === 'up') {
-                alert("Check your email for a verification link!");
-            } else {
-                window.location.href = 'index.html';
-            }
-        }
+          });
+    
+    if (error) alert(error.message);
+    else if (type === 'up') alert("Check your email! If the link doesn't work, ensure you've set the Redirect URL in Supabase settings.");
+    else window.location.href = 'index.html';
+}
     </script>
 </body>
 </html>
