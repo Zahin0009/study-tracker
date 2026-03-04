@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard | Study Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav class="bg-white/80 sticky top-0 z-50 backdrop-blur-md border-b border-slate-200 p-4 flex justify-between">
+        <div class="max-w-5xl flex gap-8 font-semibold text-slate-600">
+            <a href="index.html" class="text-indigo-600">Dashboard</a>
+            <a href="calendar.html">Calendar</a>
+            <a href="reports.html">Reports</a>
+        </div>
+        <button onclick="supabase.auth.signOut().then(() => location.reload())" class="text-sm text-red-500">Sign Out</button>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-10">
+        <header class="flex justify-between items-center mb-10">
+            <h1 class="text-4xl font-black">My Syllabus</h1>
+            <button onclick="addSubject()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold hover:scale-105 transition">
+                + Add Subject
+            </button>
+        </header>
+        <div id="subjectContainer" class="grid gap-8">
+            <p class="text-center text-slate-400">Loading your data from cloud...</p>
+        </div>
+    </main>
+
+    <script>
+        let studyData = [];
+
+        async function init() {
+            const user = await checkUser();
+            const { data, error } = await supabase.from('study_progress').select('data_json').eq('user_id', user.id).single();
+            if (data) studyData = data.data_json;
+            render();
+        }
+
+        async function save() {
+            const user = (await supabase.auth.getUser()).data.user;
+            await supabase.from('study_progress').upsert({ user_id: user.id, data_json: studyData });
+            render();
+        }
+
+        // ... Keep addSubject, addChapter, toggleProgress, editChapter, deleteChapter, deleteSubject functions from previous version ...
+        // Ensure they call save() at the end.
+
+        function render() {
+            const container = document.getElementById('subjectContainer');
+            if (studyData.length === 0) {
+                container.innerHTML = `<div class="glass-card p-10 text-center rounded-3xl"><p class="text-slate-400">No subjects yet.</p></div>`;
+                return;
+            }
+            container.innerHTML = studyData.map((sub, sIdx) => `
+                <div class="glass-card p-8 rounded-3xl animate-fade">
+                    <div class="flex justify-between mb-4">
+                        <h2 class="text-2xl font-black">${sub.name}</h2>
+                        <button onclick="deleteSubject(${sIdx})" class="text-red-400 text-sm">Delete</button>
+                    </div>
+                    <button onclick="addChapter(${sIdx})" class="text-indigo-600 text-sm font-bold mb-4">+ New Chapter</button>
+                    <div class="space-y-4">
+                        ${sub.chapters.map((chap, cIdx) => `
+                            <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-white/40 hover:bg-white/80 transition">
+                                <span class="font-bold text-slate-700">${chap.name}</span>
+                                <div class="flex gap-4 items-center">
+                                    <label class="text-xs font-bold"><input type="checkbox" ${chap.mcq ? 'checked' : ''} onchange="toggleProgress(${sIdx}, ${cIdx}, 'mcq')"> MCQ</label>
+                                    <label class="text-xs font-bold"><input type="checkbox" ${chap.book ? 'checked' : ''} onchange="toggleProgress(${sIdx}, ${cIdx}, 'book')"> BOOK</label>
+                                    <label class="text-xs font-bold"><input type="checkbox" ${chap.testPaper ? 'checked' : ''} onchange="toggleProgress(${sIdx}, ${cIdx}, 'testPaper')"> TEST PAPER</label>
+                                    <label class="text-xs font-bold"><input type="checkbox" ${chap.qb ? 'checked' : ''} onchange="toggleProgress(${sIdx}, ${cIdx}, 'qb')"> QB</label>
+                                    <button onclick="editChapter(${sIdx}, ${cIdx})" class="ml-4 text-slate-400 hover:text-indigo-600">Edit</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        init();
+    </script>
+</body>
+</html>

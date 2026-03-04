@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendar | Study Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav class="bg-white/80 sticky top-0 z-50 backdrop-blur-md border-b border-slate-200 p-4">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex gap-8 font-semibold text-slate-600">
+                <a href="index.html" class="nav-link">Dashboard</a>
+                <a href="calendar.html" class="nav-link text-indigo-600">Calendar</a>
+                <a href="reports.html" class="nav-link">Reports</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto p-6 md:p-10">
+        <h1 class="text-4xl font-extrabold text-slate-900 mb-8 animate-fade">My Routine</h1>
+        <div id="calendar" class="glass-card p-6 rounded-3xl animate-fade"></div>
+    </div>
+
+    <script>
+        let calendar;
+
+        async function initCalendar() {
+            const user = await checkUser();
+            
+            // Fetch events from Supabase
+            const { data } = await supabase.from('study_progress').select('calendar_json').eq('user_id', user.id).single();
+            const initialEvents = data?.calendar_json || [];
+
+            var calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' },
+                editable: true,
+                selectable: true,
+                events: initialEvents,
+                select: async function(info) {
+                    const title = prompt('Study Session Name:');
+                    if (title) {
+                        calendar.addEvent({ title, start: info.startStr, end: info.endStr });
+                        await saveCalendar();
+                    }
+                    calendar.unselect();
+                },
+                eventClick: async function(info) {
+                    const action = prompt("Edit Session (or type 'delete'):", info.event.title);
+                    if (action === null) return;
+                    if (action.toLowerCase() === 'delete') info.event.remove();
+                    else if (action !== "") info.event.setProp('title', action);
+                    await saveCalendar();
+                },
+                eventChange: saveCalendar,
+                eventRemove: saveCalendar
+            });
+            calendar.render();
+        }
+
+        async function saveCalendar() {
+            const user = (await supabase.auth.getUser()).data.user;
+            const events = calendar.getEvents().map(e => ({
+                title: e.title, start: e.startStr, end: e.endStr
+            }));
+            await supabase.from('study_progress').upsert({ 
+                user_id: user.id, 
+                calendar_json: events 
+            });
+        }
+
+        // Before running, update your SQL table in Supabase to include calendar_json:
+        // ALTER TABLE study_progress ADD COLUMN calendar_json JSONB;
+
+        initCalendar();
+    </script>
+</body>
+</html>
