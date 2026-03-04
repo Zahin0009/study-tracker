@@ -2,73 +2,123 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Profile | Study Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Profile Specific Styles */
+        .profile-card {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 40px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        /* The Round & Readable Input Fix */
+        .pill-input {
+            width: 100%;
+            /* Force a light, high-contrast background for text visibility */
+            background: #ffffff !important; 
+            /* Force dark text color so it's always readable */
+            color: #1e293b !important; 
+            border: 2px solid #e2e8f0;
+            border-radius: 50px; /* Makes it perfectly round */
+            padding: 18px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.3s ease;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .pill-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+            transform: scale(1.02);
+        }
+
+        .pill-textarea {
+            border-radius: 25px !important;
+            resize: none;
+        }
+
+        .label-text {
+            font-weight: 800;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 20px;
+            margin-bottom: 8px;
+            display: block;
+            color: var(--text);
+        }
+
+        .save-btn {
+            background: var(--primary);
+            color: white;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 20px;
+            border-radius: 50px;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .save-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(99, 102, 241, 0.4);
+        }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-    <nav class="bg-white/80 sticky top-0 z-50 backdrop-blur-md border-b border-slate-200 p-4">
-    <div class="max-w-5xl mx-auto flex justify-between items-center">
-        <div class="flex gap-6 font-semibold text-slate-600">
-            <a href="index.html" class="nav-link" id="nav-dash">Dashboard</a>
-            <a href="calendar.html" class="nav-link" id="nav-cal">Calendar</a>
-            <a href="reports.html" class="nav-link" id="nav-rep">Reports</a>
-        </div>
-        <div class="profile-nav-container">
-            <a href="profile.html">
-                <img id="navAvatar" src="https://ui-avatars.com/api/?name=User" class="nav-avatar" alt="Profile">
-            </a>
-        </div>
-    </div>
-</nav>
+<body>
 
-    <main class="max-w-2xl mx-auto p-6 md:p-10">
-        <div class="glass-card p-8 rounded-[2rem] animate-fade">
-            <h1 class="text-3xl font-black text-slate-800 mb-6">Student Profile</h1>
+    <nav>
+        <div class="nav-container">
+            <div class="flex gap-4">
+                <a href="index.html" class="nav-link font-bold">Dashboard</a>
+                <a href="calendar.html" class="nav-link font-bold">Calendar</a>
+                <a href="reports.html" class="nav-link font-bold">Reports</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleDarkMode()" id="themeBtn"></button>
+                <a href="profile.html"><img id="navAvatar" src="https://ui-avatars.com/api/?name=User" class="nav-avatar"></a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex justify-center items-center min-h-[calc(100vh-72px)] p-6">
+        <div class="profile-card animate-fade">
+            <div class="flex flex-col items-center mb-10">
+                <img id="profilePreview" src="https://ui-avatars.com/api/?name=User" 
+                     class="w-28 h-28 rounded-full border-4 border-white shadow-xl mb-4">
+                <h2 id="userNameDisplay" class="text-2xl font-black" style="color: var(--text)">Student Profile</h2>
+                <input type="file" id="imgUpload" class="hidden" onchange="uploadImage(this)">
+                <button onclick="document.getElementById('imgUpload').click()" class="text-indigo-500 font-bold text-xs mt-2 hover:underline">Change Photo</button>
+            </div>
+
+            <div class="form-group">
+                <label class="label-text">Full Name</label>
+                <input id="userName" type="text" class="pill-input" placeholder="Enter your name...">
+            </div>
+
+            <div class="form-group">
+                <label class="label-text">Home Address</label>
+                <textarea id="userAddress" rows="3" class="pill-input pill-textarea" placeholder="Enter your address..."></textarea>
+            </div>
+
+            <button onclick="saveProfile()" class="save-btn">Save Profile</button>
             
-            <div class="flex items-center gap-6 mb-8 p-4 bg-indigo-50/50 rounded-2xl">
-                <img id="profilePreview" src="https://ui-avatars.com/api/?name=User" class="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-md">
-                <div>
-                    <label class="block text-sm font-bold text-indigo-600 mb-1 cursor-pointer hover:underline">
-                        Upload Student Image
-                        <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="uploadImage(this)">
-                    </label>
-                    <p class="text-xs text-slate-400">JPG or PNG. Max 1MB.</p>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase ml-1 mb-1">Full Name</label>
-                    <input id="userName" type="text" class="input-field" placeholder="John Doe">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase ml-1 mb-1">Contact Number</label>
-                    <input id="userContact" type="text" class="input-field" placeholder="+1 234 567 890">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase ml-1 mb-1">Home Address</label>
-                    <textarea id="userAddress" rows="2" class="input-field" placeholder="123 Study Lane, Knowledge City"></textarea>
-                </div>
-
-                <button onclick="saveProfile()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 mt-4">
-                    Save Changes
-                </button>
-            </div>
-
-            <hr class="my-10 border-slate-200">
-
-            <div class="space-y-4">
-                <h3 class="text-lg font-bold text-slate-800">Account Security</h3>
-                <button onclick="changePassword()" class="w-full bg-white text-slate-700 border border-slate-200 p-4 rounded-xl font-bold hover:bg-slate-50 transition">
-                    Change Password
-                </button>
-                <button onclick="handleLogout()" class="w-full bg-red-50 text-red-600 p-4 rounded-xl font-bold hover:bg-red-100 transition">
-                    Sign Out
-                </button>
+            <div class="flex justify-center mt-6 gap-6">
+                <button onclick="handleLogout()" class="text-red-500 font-bold text-sm">Sign Out</button>
             </div>
         </div>
     </main>
@@ -77,63 +127,48 @@
         async function loadProfile() {
             const user = await checkUser();
             if(!user) return;
+            loadNavAvatar();
 
             const { data } = await supabaseClient.from('study_progress').select('profile_json, avatar_url').eq('user_id', user.id).maybeSingle();
             
             if (data?.profile_json) {
                 document.getElementById('userName').value = data.profile_json.name || '';
-                document.getElementById('userContact').value = data.profile_json.contact || '';
                 document.getElementById('userAddress').value = data.profile_json.address || '';
+                document.getElementById('userNameDisplay').innerText = data.profile_json.name || "Student Profile";
             }
             if (data?.avatar_url) {
                 document.getElementById('profilePreview').src = data.avatar_url;
-                document.getElementById('navAvatar').src = data.avatar_url;
             }
+        }
+
+        async function saveProfile() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const profileData = {
+                name: document.getElementById('userName').value,
+                address: document.getElementById('userAddress').value
+            };
+
+            await supabaseClient.from('study_progress').upsert({ 
+                user_id: user.id, 
+                profile_json: profileData 
+            });
+            
+            document.getElementById('userNameDisplay').innerText = profileData.name;
+            alert("Profile Updated!");
         }
 
         async function uploadImage(input) {
             const file = input.files[0];
             if (!file) return;
-
-            const user = (await supabaseClient.auth.getUser()).data.user;
-            const fileExt = file.name.split('.').pop();
-            const filePath = `${user.id}/avatar.${fileExt}`;
-
-            // 1. Upload to Supabase Storage (Bucket name: 'avatars')
-            // Note: You must create a public bucket named 'avatars' in Supabase Storage!
-            const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(filePath, file, { upsert: true });
-
-            if (!uploadError) {
-                const { data: { publicUrl } } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
-                document.getElementById('profilePreview').src = publicUrl;
-                document.getElementById('navAvatar').src = publicUrl;
-                
-                // Save URL to database
-                await supabaseClient.from('study_progress').upsert({ user_id: user.id, avatar_url: publicUrl });
-            }
-        }
-
-        async function saveProfile() {
-            const user = (await supabaseClient.auth.getUser()).data.user;
-            const profileData = {
-                name: document.getElementById('userName').value,
-                contact: document.getElementById('userContact').value,
-                address: document.getElementById('userAddress').value
-            };
-
-            await supabaseClient.from('study_progress').upsert({ user_id: user.id, profile_json: profileData });
-            alert("Profile updated! ✨");
-        }
-
-        async function changePassword() {
-            const newPassword = prompt("Enter your new password:");
-            if (newPassword && newPassword.length >= 6) {
-                const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-                if (error) alert(error.message);
-                else alert("Password changed successfully!");
-            } else if (newPassword) {
-                alert("Password must be at least 6 characters.");
-            }
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const filePath = `${user.id}/avatar-${Date.now()}`;
+            
+            await supabaseClient.storage.from('avatars').upload(filePath, file);
+            const { data: { publicUrl } } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+            
+            await supabaseClient.from('study_progress').upsert({ user_id: user.id, avatar_url: publicUrl });
+            document.getElementById('profilePreview').src = publicUrl;
+            document.getElementById('navAvatar').src = publicUrl;
         }
 
         function handleLogout() {
@@ -141,28 +176,6 @@
         }
 
         loadProfile();
-        async function loadNavAvatar() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
-
-    const { data } = await supabaseClient
-        .from('study_progress')
-        .select('avatar_url')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-    if (data?.avatar_url) {
-        document.getElementById('navAvatar').src = data.avatar_url;
-    }
-}
-
-// Call this inside your existing init() function
-// Example: 
-// async function init() {
-//    await checkUser();
-//    loadNavAvatar(); 
-//    ... rest of your code
-// }
     </script>
 </body>
 </html>

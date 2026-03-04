@@ -2,110 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar | Study Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <script src="config.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-50 min-h-screen">
-    <nav class="bg-white/80 sticky top-0 z-50 backdrop-blur-md border-b border-slate-200 p-4">
-    <div class="max-w-5xl mx-auto flex justify-between items-center">
-        <div class="flex gap-6 font-semibold text-slate-600">
-            <a href="index.html" class="nav-link" id="nav-dash">Dashboard</a>
-            <a href="calendar.html" class="nav-link" id="nav-cal">Calendar</a>
-            <a href="reports.html" class="nav-link" id="nav-rep">Reports</a>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="flex gap-4">
+                <a href="index.html" class="nav-link">Dashboard</a>
+                <a href="calendar.html" class="nav-link" style="color:var(--primary)">Calendar</a>
+                <a href="reports.html" class="nav-link">Reports</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleDarkMode()" id="themeBtn"></button>
+                <a href="profile.html"><img id="navAvatar" src="https://ui-avatars.com/api/?name=User" class="nav-avatar"></a>
+            </div>
         </div>
-        <div class="profile-nav-container">
-            <a href="profile.html">
-                <img id="navAvatar" src="https://ui-avatars.com/api/?name=User" class="nav-avatar" alt="Profile">
-            </a>
-        </div>
-    </div>
-</nav>
+    </nav>
 
-    <div class="max-w-5xl mx-auto p-6 md:p-10">
-        <h1 class="text-4xl font-extrabold text-slate-900 mb-8 animate-fade">My Routine</h1>
-        <div id="calendar" class="glass-card p-6 rounded-3xl animate-fade"></div>
-    </div>
+    <main class="max-w-[1200px] mx-auto p-6">
+        <div id="calendar" class="animate-fade"></div>
+    </main>
 
     <script>
         let calendar;
 
-        async function initCalendar() {
+        async function init() {
             const user = await checkUser();
             if (!user) return;
+            loadNavAvatar();
 
             const { data } = await supabaseClient.from('study_progress').select('calendar_json').eq('user_id', user.id).maybeSingle();
-            const initialEvents = data?.calendar_json || [];
-
-            var calendarEl = document.getElementById('calendar');
+            
+            const calendarEl = document.getElementById('calendar');
             calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'timeGridWeek',
-                headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' },
+                slotMinTime: '06:00:00',
+                slotMaxTime: '24:00:00',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                height: '80vh',
+                nowIndicator: true,
                 editable: true,
                 selectable: true,
-                events: initialEvents,
-                select: async function(info) {
-                    const title = prompt('Study Session Name:');
+                events: data?.calendar_json || [],
+                select: async (info) => {
+                    const title = prompt('Event Title:');
                     if (title) {
                         calendar.addEvent({ title, start: info.startStr, end: info.endStr });
-                        await saveCalendar();
+                        await save();
                     }
                     calendar.unselect();
                 },
-                eventClick: async function(info) {
-                    const action = prompt("Edit Session (or type 'delete'):", info.event.title);
-                    if (action === null) return;
-                    if (action.toLowerCase() === 'delete') info.event.remove();
-                    else if (action !== "") info.event.setProp('title', action);
-                    await saveCalendar();
+                eventClick: async (info) => {
+                    if (confirm('Delete event?')) {
+                        info.event.remove();
+                        await save();
+                    }
                 },
-                eventChange: saveCalendar,
-                eventRemove: saveCalendar
+                eventChange: save
             });
             calendar.render();
         }
 
-        async function saveCalendar() {
+        async function save() {
             const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) return;
-            
             const events = calendar.getEvents().map(e => ({
                 title: e.title, start: e.startStr, end: e.endStr
             }));
-            
-            await supabaseClient.from('study_progress').upsert({ 
-                user_id: user.id, 
-                calendar_json: events 
-            });
+            await supabaseClient.from('study_progress').upsert({ user_id: user.id, calendar_json: events });
         }
-
-        initCalendar();
-        async function loadNavAvatar() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
-
-    const { data } = await supabaseClient
-        .from('study_progress')
-        .select('avatar_url')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-    if (data?.avatar_url) {
-        document.getElementById('navAvatar').src = data.avatar_url;
-    }
-}
-
-// Call this inside your existing init() function
-// Example: 
-// async function init() {
-//    await checkUser();
-//    loadNavAvatar(); 
-//    ... rest of your code
-// }
+        init();
     </script>
 </body>
 </html>

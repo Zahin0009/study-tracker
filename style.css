@@ -1,117 +1,218 @@
-/* LIGHT THEME REFINEMENT */
+/* --- UI TOOTKIT & VARIABLES --- */
 :root {
     --primary: #6366f1;
     --bg: #f8fafc;
-    --card-bg: rgba(255, 255, 255, 0.7);
+    --card: rgba(255, 255, 255, 0.8);
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: rgba(0, 0, 0, 0.05);
+}
+
+body.dark {
+    --bg: #030712;
+    --card: rgba(15, 23, 42, 0.7);
+    --text: #ffffff; /* High contrast for readability */
+    --text-muted: #94a3b8;
+    --border: rgba(255, 255, 255, 0.1);
 }
 
 body {
+    margin: 0;
     font-family: 'Inter', sans-serif;
     background-color: var(--bg);
-    background-image: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
-                      radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
-    color: #334155;
+    color: var(--text);
+    transition: background 0.5s ease, color 0.5s ease;
+    background-attachment: fixed;
 }
 
-.glass-card {
-    background: var(--card-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+/* --- LIQUID BACKGROUND EFFECT --- */
+body.dark {
+    background-image: 
+        radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.15) 0, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(15, 10, 40, 1) 0, transparent 50%);
 }
 
-/* SMOOTH ENTRANCE ANIMATION */
-.animate-fade {
-    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes slideUp {
-    0% { opacity: 0; transform: translateY(30px) scale(0.98); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* INTERACTIVE NAV LINKS */
-.nav-link {
-    padding: 0.5rem 1rem;
-    border-radius: 0.75rem;
-    transition: all 0.3s ease;
-}
-
-.nav-link:hover {
-    background: white;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    color: var(--primary);
-}
-
-/* CUSTOM CHECKBOX STYLE */
-input[type="checkbox"] {
-    appearance: none;
-    width: 1.25rem;
-    height: 1.25rem;
-    border: 2px solid #cbd5e1;
-    border-radius: 6px;
-    background: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: grid;
-    place-content: center;
-}
-
-input[type="checkbox"]::before {
-    content: "";
-    width: 0.65rem;
-    height: 0.65rem;
-    transform: scale(0);
-    transition: 120ms transform ease-in-out;
-    box-shadow: inset 1em 1em var(--primary);
-    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-}
-
-input[type="checkbox"]:checked {
-    border-color: var(--primary);
-    background: #eef2ff;
-}
-
-input[type="checkbox"]:checked::before {
-    transform: scale(1);
-}
-
-/* Floating Profile Image (Top Right) */
-.profile-nav-container {
-    position: relative;
+/* --- NAVIGATION --- */
+nav {
+    background: var(--card);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--border);
+    height: 72px;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    width: 100%;
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-weight: 700;
 }
 
 .nav-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
     object-fit: cover;
     border: 2px solid white;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
 }
 
-.nav-avatar:hover {
-    transform: scale(1.1);
+/* --- SUBJECT CARDS & PROGRESS --- */
+.glass-card {
+    background: var(--card);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 24px;
+    margin-bottom: 24px;
 }
 
-/* Updated Input Styles */
-.input-field {
+.progress-track {
     width: 100%;
-    padding: 1rem;
-    border-radius: 1rem;
-    border: 1px solid #e2e8f0;
-    background: rgba(255, 255, 255, 0.5);
-    outline: none;
-    transition: all 0.2s ease;
+    height: 8px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 10px;
+    margin: 15px 0;
+    overflow: hidden;
 }
 
-.input-field:focus {
-    border-color: #6366f1;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+body.dark .progress-track { background: rgba(255,255,255,0.1); }
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary);
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* --- CHAPTER ROWS (NO JUMPING) --- */
+.chapter-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.checkbox-group {
+    display: flex;
+    gap: 15px;
+}
+
+.item-check {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.item-check label {
+    font-size: 9px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+}
+
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.animate-fade {
+    animation: slideUp 0.5s ease forwards;
+}
+
+/* --- UNIVERSAL NAV FIX --- */
+nav {
+    width: 100%;
+    background: var(--card);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--border);
+    height: 72px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    width: 100%;
+    max-width: 1200px; /* Increased for better spacing */
+    margin: 0 auto; /* Keeps it centered but spans wide */
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+}
+
+/* --- GOOGLE CALENDAR THEME --- */
+#calendar {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'Roboto', 'Inter', sans-serif;
+}
+
+body.dark #calendar {
+    background: #17191c;
+    color: white;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+    border: 1px solid #e0e0e0 !important;
+}
+
+body.dark .fc-theme-standard td, body.dark .fc-theme-standard th {
+    border: 1px solid #3c4043 !important;
+}
+
+.fc-event {
+    border-radius: 4px !important;
+    padding: 2px 4px !important;
+    font-size: 0.85rem !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.fc-v-event { background-color: #7986cb !important; } /* Google Blue */
+.fc-col-header-cell { padding: 10px 0 !important; background: transparent; }
+.fc-timegrid-slot { height: 3em !important; }
+
+/* Reports Specific Tweak */
+#reportContainer .glass-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 380px;
+}
+
+/* Material Chart Tooltip Fix */
+.chartjs-tooltip {
+    background: var(--card) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    color: var(--text) !important;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
